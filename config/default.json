@@ -1,0 +1,22 @@
+{
+  "port": 8081,
+  "app": {
+    "name": "kimazon"
+  },
+  "secret": "***",
+  "database": {
+    "host": "kimazon-cluster.smfsm.mongodb.net",
+    "defaultDbName": "kimazon",
+    "credentials": {
+      "user_id": "admin",
+      "password": "adminadmin"
+    }
+  },
+  "web_portal": {
+    "root_host": "http://localhost:4200"
+  },
+  "logs": {
+    "level": "debug",
+    "stream": "console"
+  }
+}
