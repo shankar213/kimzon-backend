@@ -6,6 +6,7 @@
     "start": "node ./bin/www | \"./node_modules/.bin/bunyan\""
   },
   "dependencies": {
+    "@sendgrid/mail": "^7.2.6",
     "bunyan": "^1.8.14",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",

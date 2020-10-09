@@ -1,0 +1,13 @@
+module.exports = {
+    // /////////////////////////////////////////////
+    // SEND GRID CONSTANTS
+    // ////////////////////////////////////////////
+    FIELD_SEND_GRID: 'send_grid',
+    FIELD_SENDGRID_API_KEY: 'SENDGRID_API_KEY',
+    FIELD_MAIL_FROM: 'mail_from',
+    // /////////////////////////////////////////////
+    //
+    // ////////////////////////////////////////////
+    FIELD_WEB_PORTAL: 'web_portal',
+    FIELD_ROOT_HOST: 'root_host',
+}

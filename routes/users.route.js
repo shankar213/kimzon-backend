@@ -1,10 +1,17 @@
 const express = require('express')
 const router = express.Router()
 const _ = require('lodash')
+const sgMail = require('@sendgrid/mail')
 const utils = require('../lib/utils')
 const userRepository = require("../repositories/users.repo")
 const httpStatusCode = require('http-status-codes').StatusCodes
 
+const passport = require("passport")
+const jwt = require('jsonwebtoken')
+
+const config = require('../config/default')
+
+sgMail.setApiKey(config[utils.configCons.FIELD_SEND_GRID][utils.configCons.FIELD_SENDGRID_API_KEY])
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -38,7 +45,8 @@ const addUser = async (req, res, next) => {
         if (isExist) {
             const response = {}
             response.error = true
-            response.message = "This Email is already used with other account Please use different email address"
+            response.email_sent = false
+            response.message = "Email is already used with other account Please use different email address"
             return res.status(httpStatusCode.OK).send(utils.responseGenerators(response, httpStatusCode.OK, "Failed to Add new User"))
         }
         const newUser = prepareUserBody(userDetailsFromBody)
@@ -47,6 +55,15 @@ const addUser = async (req, res, next) => {
 
         if (result) {
             response.user_details = result
+            try {
+                const mailBody = `Congratulations! You have successfully signed up with Kimazon, you can now log into your account by clicking on the link below:<br/><br/>
+                                   <a href="${config[utils.configCons.FIELD_WEB_PORTAL][utils.configCons.FIELD_ROOT_HOST]}">${config[utils.configCons.FIELD_WEB_PORTAL][utils.configCons.FIELD_ROOT_HOST]}</a>`
+                await utils.sendEmail(result.email, 'Congratulations!, Registered Successfully', mailBody)
+                response.email_sent = true
+            } catch (err) {
+                response.email_sent = false
+                response.email_error = "Failed to send Email"
+            }
         } else {
             response.user_details = null
             response.error = "Failed to Register User"
