@@ -75,5 +75,40 @@ const addUser = async (req, res, next) => {
     }
 }
 
+const validateCredentials = async (req, res, next) => {
+    try {
+        passport.authenticate('login', async (err, user, info) => {
+            try {
+                if (err || !user) {
+                    return res.status(httpStatusCode.OK).send(utils.errorsArrayGenrator("Invalid User Credentials", httpStatusCode.OK, 'Please check your user id and/or password', {valid: false}))
+                }
+                req.login(user, {session: false}, async (error) => {
+                    if (error) return next(error)
+                    const tokenData = {_id: user._id, email: user.email}
+                    const token = jwt.sign({user: tokenData}, 'top_secret')
+
+                    const response = {
+                        valid: true,
+                        token: token,
+                        user_details: user,
+                    }
+
+                    return res.status(httpStatusCode.OK).send(utils.responseGenerators(response, httpStatusCode.OK, 'User Logged in Successfully'))
+
+                })
+            } catch (error) {
+                utils.logger.error(`error while validating user credentials ${error}`)
+                return next(error)
+            }
+        })(req, res, next)
+
+    } catch (err) {
+        utils.logger.error(`validateCredentials error ${err}`)
+        res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err, httpStatusCode.INTERNAL_SERVER_ERROR, 'server error'))
+    }
+}
+
+
 router.post('/register', addUser)
+router.post('/login', validateCredentials)
 module.exports = router;

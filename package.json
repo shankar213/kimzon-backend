@@ -15,7 +15,8 @@
     "mongoose": "^5.10.7",
     "mongoose-audit-log": "^2.1.0",
     "morgan": "~1.9.1",
-    "passport": "^0.4.1"
+    "passport": "^0.4.1",
+    "passport-local": "^1.0.0"
   },
   "devDependencies": {
     "config": "^3.3.2",
