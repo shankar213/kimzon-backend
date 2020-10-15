@@ -84,13 +84,20 @@ const validateCredentials = async (req, res, next) => {
                 }
                 req.login(user, {session: false}, async (error) => {
                     if (error) return next(error)
+
                     const tokenData = {_id: user._id, email: user.email}
+                    //Sign the JWT token and populate the payload with the user email and id
                     const token = jwt.sign({user: tokenData}, 'top_secret')
+
+                    //remove hash and salt from the user object for security purpose
+                    const userData = _.cloneDeep(user)
+                    delete userData.hash
+                    delete userData.salt
 
                     const response = {
                         valid: true,
                         token: token,
-                        user_details: user,
+                        user_details: userData,
                     }
 
                     return res.status(httpStatusCode.OK).send(utils.responseGenerators(response, httpStatusCode.OK, 'User Logged in Successfully'))
