@@ -21,7 +21,7 @@ router.get('/', function(req, res, next) {
 
 
 
-function prepareUserBody(dataFromBody, forEdit = false) {
+function prepareUserBody(dataFromBody) {
     const user = _.cloneDeep(dataFromBody)
         if (!user.role) {
             user.role = utils.enumCons.ROLES.CUSTOMER
@@ -75,5 +75,88 @@ const addUser = async (req, res, next) => {
     }
 }
 
+const validateCredentials = async (req, res, next) => {
+    try {
+        passport.authenticate('login', async (err, user, info) => {
+            try {
+                if (err || !user) {
+                    return res.status(httpStatusCode.OK).send(utils.errorsArrayGenrator("Invalid User Credentials", httpStatusCode.OK, 'Please check your user id and/or password', {valid: false}))
+                }
+                req.login(user, {session: false}, async (error) => {
+                    if (error) return next(error)
+
+                    const tokenData = {_id: user._id, email: user.email}
+                    //Sign the JWT token and populate the payload with the user email and id
+                    const token = jwt.sign({user: tokenData}, 'top_secret')
+
+                    //remove hash and salt from the user object for security purpose
+                    const userData = _.cloneDeep(user)
+                    delete userData.hash
+                    delete userData.salt
+
+                    const response = {
+                        valid: true,
+                        token: token,
+                        user_details: userData,
+                    }
+
+                    return res.status(httpStatusCode.OK).send(utils.responseGenerators(response, httpStatusCode.OK, 'User Logged in Successfully'))
+
+                })
+            } catch (error) {
+                utils.logger.error(`error while validating user credentials ${error}`)
+                return next(error)
+            }
+        })(req, res, next)
+
+    } catch (err) {
+        utils.logger.error(`validateCredentials error ${err}`)
+        res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err, httpStatusCode.INTERNAL_SERVER_ERROR, 'server error'))
+    }
+}
+
+
+const sendSendSecurityCode = async (req, res, next) => {
+    try {
+        const body = req.body
+        const email = body.email
+        if (!email) {
+            res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator('No Email Id Found', httpStatusCode.INTERNAL_SERVER_ERROR, 'server error'))
+        }
+
+        const userWithGivenMail = await userRepository.findOne({email: email})
+
+        const response = {}
+        if (!userWithGivenMail) {
+            response.status = false
+            response.error_message = "Provided Email is not linked with any account, Please check you email address"
+            return res.status(httpStatusCode.OK).send(utils.errorsArrayGenrator(response, httpStatusCode.OK, "Email is not linked with any account, Please check you email address"))
+        }
+
+        const securityCode = Math.floor(100000 + Math.random() * 900000)
+        const mailBody = `Your One time Security code is ${securityCode} </a><br/>`
+        try {
+            utils.logger.debug(`Sending security code in email with body : ${mailBody}`)
+            await utils.sendEmail(email, 'Here is your Security Code(OTP)', mailBody)
+            response.email_sent = true
+            response.mail_body = mailBody
+            response.security_code = securityCode
+            await userRepository.update({email: email}, {security_code: securityCode})
+
+            return res.status(httpStatusCode.OK).send(utils.responseGenerators(response, httpStatusCode.OK, "Security Code mail sent successfully"))
+        } catch (err) {
+            utils.logger.error(`error while sending email error ${err}`)
+            response.email_sent = false
+            response.email_error = "Fail to send Email"
+            return res.status(httpStatusCode.OK).send(utils.responseGenerators(response, httpStatusCode.OK, "Failed to send email for  Security Code"))
+        }
+    } catch (err) {
+        utils.logger.error(`error sendSendSecurityCode ${err} ${JSON.stringify(err)}`)
+        res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err, httpStatusCode.INTERNAL_SERVER_ERROR, 'Server Error'))
+    }
+}
+
 router.post('/register', addUser)
+router.post('/login', validateCredentials)
+router.post('/send-security-code', sendSendSecurityCode)
 module.exports = router;

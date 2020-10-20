@@ -34,3 +34,16 @@ module.exports.findOne = async (findQuery) => {
     }
 
 }
+
+module.exports.update = async (query, dataToUpdate) => {
+    try {
+        utils.logger.debug(`data to be updated : ${JSON.stringify(dataToUpdate)}`, `update query : ${JSON.stringify(query)}`)
+
+        const result = await UsersRepo.findOneAndUpdate(query, {$set: dataToUpdate}, {new: true})
+        utils.logger.debug("Users Object Data", result)
+        return result
+    } catch (e) {
+        utils.logger.error("Error while updating  data to mongo db", e)
+        throw new Error("Invalid Data")
+    }
+}

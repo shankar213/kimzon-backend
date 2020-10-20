@@ -8,6 +8,8 @@ const autoIncrement = require('mongoose-plugin-autoinc')
 const config = require('config')
 const indexRouter = require('./routes/index')
 
+const passport = require('passport')
+
 const app = express()
 
 app.use(logger('dev'));
@@ -26,5 +28,8 @@ require('./models/users.model');
 
 app.use('/api/', indexRouter);
 app.use('/api/users/',  require('./routes/users.route'));
+
+app.use(passport.initialize())
+require('./lib/passport')
 
 module.exports = app;

@@ -8,19 +8,19 @@
   "dependencies": {
     "@sendgrid/mail": "^7.2.6",
     "bunyan": "^1.8.14",
+    "config": "^3.3.2",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "express": "~4.16.1",
+    "http-status-codes": "^2.1.4",
+    "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.20",
     "mongoose": "^5.10.7",
     "mongoose-audit-log": "^2.1.0",
+    "mongoose-plugin-autoinc": "^1.1.9",
     "morgan": "~1.9.1",
-    "passport": "^0.4.1"
+    "passport": "^0.4.1",
+    "passport-local": "^1.0.0"
   },
-  "devDependencies": {
-    "config": "^3.3.2",
-    "http-status-codes": "^2.1.4",
-    "jsonwebtoken": "^8.5.1",
-    "mongoose-plugin-autoinc": "^1.1.9"
-  }
+  "devDependencies": {}
 }
