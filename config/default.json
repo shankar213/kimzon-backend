@@ -12,6 +12,13 @@
       "password": "adminadmin"
     }
   },
+  "s3": {
+    "bucket_name": "***",
+    "client_config": {
+      "accessKeyId": "***",
+      "secretAccessKey": "***"
+    }
+  },
   "web_portal": {
     "root_host": "http://localhost:4200"
   },
