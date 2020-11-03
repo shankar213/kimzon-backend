@@ -83,7 +83,45 @@ const addProduct = async (req, res, next) => {
     }
 }
 
+const getProducts = async (req, res, next) => {
+    try {
+        const findQuery = {}
+        if (req.params.seller_id) {
+            const sellerID = req.params.seller_id
+            findQuery["seller_id"] = +sellerID
+        }
+
+        if (req.method === "POST") {
+            if (req.body.category) findQuery.category = req.body.category
+            if (req.body.price && (req.body.price.min || req.body.price.max)) {
+                findQuery.price = {}
+                if (req.body.price.min)
+                    findQuery.price["$gte"] = req.body.price.min
+                if (req.body.price.max)
+                    findQuery.price["$lt"] = req.body.price.max
+            }
+            if (req.body.ids && Array.isArray(req.body.ids)) {
+                findQuery.id = {$in: req.body.ids}
+            }
+        }
+        const products = await productRepository.findAll(findQuery)
+        const totalOrderCount = await productRepository.count(findQuery)
+        utils.logger.debug(`Products list : ${JSON.stringify(products)}`)
+
+        const responseData = {products: products, product_count: products.length, total_count: totalOrderCount}
+        res.status(httpStatusCode.OK).send(utils.responseGenerators(responseData, httpStatusCode.OK, "Products Fetched Successfully"))
+    } catch
+        (err) {
+        utils.logger.error(err)
+        res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err, httpStatusCode.INTERNAL_SERVER_ERROR, 'server error'))
+    }
+}
+
 router.post('/', addProduct)
+router.get('/', getProducts)
+router.post('/filter', getProducts)
+router.post('/selectedids', getProducts)
+router.get('/seller/:seller_id', getProducts)
 router.post('/:product_id/image', upload.single('image'), addImageToProduct)
 
 module.exports = router

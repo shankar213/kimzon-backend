@@ -17,6 +17,30 @@ module.exports.insertOne = async (documentJSON) => {
     }
 }
 
+module.exports.find = async (findQuery) => {
+    try {
+        utils.logger.debug(`query to find products ${JSON.stringify(findQuery)}`)
+        const result = await Product.findOne(findQuery)
+        utils.logger.debug(`products matching find query : ${JSON.stringify(result)}`)
+        return result
+    } catch (e) {
+        utils.logger.error(`error while finding data from collection : ${utils.dbCons.COLLECTION_USERS} for query ${findQuery}`, e)
+        throw new Error("Error finding products for given query")
+    }
+}
+
+module.exports.findAll = async (findQuery) => {
+    try {
+        utils.logger.debug(`query to find Product Details ${JSON.stringify(findQuery)}`)
+        const result = await Product.find(findQuery)
+        utils.logger.debug(`products matching find query : ${JSON.stringify(result)}`)
+        return result
+    } catch (e) {
+        utils.logger.error(`error while finding data from collection : ${utils.dbCons.COLLECTION_USERS} for query ${findQuery}`, e)
+        throw new Error("Error finding products for given query")
+    }
+}
+
 module.exports.updateProductById = async (orderID, dataToUpdate) => {
     try {
         utils.logger.debug("Product Object Data", dataToUpdate)
@@ -30,5 +54,19 @@ module.exports.updateProductById = async (orderID, dataToUpdate) => {
     } catch (e) {
         utils.logger.error(`error while updating data to mongo db, collection : ${productCollection} for order id ${orderID}`, e)
         return new Error("Invalid Data")
+    }
+}
+
+
+module.exports.count = async (query) => {
+
+    try {
+        utils.logger.debug(`query to count Product ${JSON.stringify(query)}`)
+        const count = await Product.find(query).count()
+        utils.logger.debug(`orders count matching count query : ${JSON.stringify(count)}`)
+        return count
+    } catch (e) {
+        utils.logger.error(`error while fetching count of  orders from mongo db with query ${JSON.stringify(query)}, collection : ${productCollection} `, e)
+        throw new Error("Error finding count of orders for given query")
     }
 }
