@@ -55,8 +55,14 @@ const addImageToProduct = async (req, res, next) => {
     }
 }
 
-function prepareProductBody(dataFromBody) {
+
+function prepareProductBody(dataFromBody, forEdit = false) {
     const product = _.cloneDeep(dataFromBody)
+    if (forEdit) {
+        delete product.images
+        delete product.seller_id
+        delete product.id
+    }
     return product
 }
 
@@ -83,9 +89,53 @@ const addProduct = async (req, res, next) => {
     }
 }
 
+const updateProduct = async (req, res, next) => {
+    try {
+        utils.logger.info(`Request body contains : ${JSON.stringify(req.body)}`)
+        const productDetailsFromBody = req.body.product
+
+        const productToUpdate = prepareProductBody(productDetailsFromBody, true)
+        const productId = req.params.product_id
+        if (!productId) {
+            utils.logger.debug(`Can not find product id in url params : ${JSON.stringify(req.params)}`)
+            res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.responseGenerators("Please provide Product id to edit", httpStatusCode.INTERNAL_SERVER_ERROR, "No Product Id found"))
+            return
+        }
+        const response = await productRepository.updateProductById(+productId, productToUpdate)
+        utils.logger.debug(`Response From Product Update  ${JSON.stringify(response)}`)
+
+        res.status(httpStatusCode.OK).send(utils.responseGenerators(response, httpStatusCode.OK, "Product Updated"))
+    } catch (err) {
+        utils.logger.error(`Update Product Error ${err}`)
+        res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err, httpStatusCode.INTERNAL_SERVER_ERROR, 'server error'))
+    }
+}
+
+const deleteProduct = async (req, res, next) => {
+    try {
+
+
+        const productId = req.params.product_id
+
+        utils.logger.info(`Request to delete the product contains : ${JSON.stringify(productId)}`)
+        if (!productId) {
+            utils.logger.debug(`Can not find product id in url params : ${JSON.stringify(req.params)}`)
+            res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.responseGenerators("Please provide Product id to delete", httpStatusCode.INTERNAL_SERVER_ERROR, "No Product Id found"))
+            return
+        }
+        const response = await productRepository.updateProductById(+productId, {is_deleted: true})
+        utils.logger.debug(`Response From Product Delete  ${JSON.stringify(response)}`)
+
+        res.status(httpStatusCode.OK).send(utils.responseGenerators(response, httpStatusCode.OK, "Product Deleted"))
+    } catch (err) {
+        utils.logger.error(`Delete Product Error ${err}`)
+        res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err, httpStatusCode.INTERNAL_SERVER_ERROR, 'server error'))
+    }
+}
+
 const getProducts = async (req, res, next) => {
     try {
-        const findQuery = {}
+        const findQuery = {is_deleted: false}
         if (req.params.seller_id) {
             const sellerID = req.params.seller_id
             findQuery["seller_id"] = +sellerID
@@ -105,10 +155,10 @@ const getProducts = async (req, res, next) => {
             }
         }
         const products = await productRepository.findAll(findQuery)
-        const totalOrderCount = await productRepository.count(findQuery)
+        const totalProductsCount = await productRepository.count(findQuery)
         utils.logger.debug(`Products list : ${JSON.stringify(products)}`)
 
-        const responseData = {products: products, product_count: products.length, total_count: totalOrderCount}
+        const responseData = {products: products, product_count: products.length, total_count: totalProductsCount}
         res.status(httpStatusCode.OK).send(utils.responseGenerators(responseData, httpStatusCode.OK, "Products Fetched Successfully"))
     } catch
         (err) {
@@ -118,6 +168,8 @@ const getProducts = async (req, res, next) => {
 }
 
 router.post('/', addProduct)
+router.put('/:product_id', updateProduct)
+router.delete('/:product_id', deleteProduct)
 router.get('/', getProducts)
 router.post('/filter', getProducts)
 router.post('/selectedids', getProducts)
