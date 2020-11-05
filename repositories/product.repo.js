@@ -17,7 +17,7 @@ module.exports.insertOne = async (documentJSON) => {
     }
 }
 
-module.exports.find = async (findQuery) => {
+module.exports.findOne = async (findQuery) => {
     try {
         utils.logger.debug(`query to find products ${JSON.stringify(findQuery)}`)
         const result = await Product.findOne(findQuery)
@@ -41,18 +41,18 @@ module.exports.findAll = async (findQuery) => {
     }
 }
 
-module.exports.updateProductById = async (orderID, dataToUpdate) => {
+module.exports.updateProductById = async (productID, dataToUpdate) => {
     try {
         utils.logger.debug("Product Object Data", dataToUpdate)
         dataToUpdate[utils.dbCons.COMMON_UPDATED_ON] = Date.now()
 
         const updateProductQuery = {}
-        updateProductQuery[utils.dbCons.FIELD_ID] = orderID
-        utils.logger.debug(`query for update ${JSON.stringify(updateProductQuery)}`, `data to update = ${JSON.stringify(dataToUpdate)}`)
+        updateProductQuery[utils.dbCons.FIELD_ID] = productID
+        utils.logger.debug(`Query for update ${JSON.stringify(updateProductQuery)}`, `data to update = ${JSON.stringify(dataToUpdate)}`)
         await Product.update(updateProductQuery, dataToUpdate)
         return Product.find(updateProductQuery)
     } catch (e) {
-        utils.logger.error(`error while updating data to mongo db, collection : ${productCollection} for order id ${orderID}`, e)
+        utils.logger.error(`error while updating data to mongo db, collection : ${productCollection} for product id ${productID}`, e)
         return new Error("Invalid Data")
     }
 }
@@ -63,10 +63,10 @@ module.exports.count = async (query) => {
     try {
         utils.logger.debug(`query to count Product ${JSON.stringify(query)}`)
         const count = await Product.find(query).count()
-        utils.logger.debug(`orders count matching count query : ${JSON.stringify(count)}`)
+        utils.logger.debug(`products count matching count query : ${JSON.stringify(count)}`)
         return count
     } catch (e) {
-        utils.logger.error(`error while fetching count of  orders from mongo db with query ${JSON.stringify(query)}, collection : ${productCollection} `, e)
-        throw new Error("Error finding count of orders for given query")
+        utils.logger.error(`error while fetching count of product from mongo db with query ${JSON.stringify(query)}, collection : ${productCollection} `, e)
+        throw new Error("Error finding count of products for given query")
     }
 }
