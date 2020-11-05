@@ -17,7 +17,7 @@ module.exports.insertOne = async (documentJSON) => {
     }
 }
 
-module.exports.find = async (findQuery) => {
+module.exports.findOne = async (findQuery) => {
     try {
         utils.logger.debug(`query to find products ${JSON.stringify(findQuery)}`)
         const result = await Product.findOne(findQuery)
