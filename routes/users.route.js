@@ -115,6 +115,30 @@ const validateCredentials = async (req, res, next) => {
     }
 }
 
+const changePassword = async (req, res, next) => {
+    try {
+        const body = req.body
+        const userWithGivenMail = await userRepository.findOne({email: body.email})
+
+        let response = {}
+
+        if (!userWithGivenMail) {
+            response.status = false
+            response.error_message = "This Email is not linked with any account, Or the account has been suspended"
+            return res.status(httpStatusCode.OK).send(utils.errorsArrayGenrator(response, httpStatusCode.OK, response.error_message))
+        }
+
+        let result = await userRepository.updatePassword({email: body.email}, body.password)
+        utils.logger.debug(`response from change password${JSON.stringify(result)}`)
+        response = result
+        return res.status(httpStatusCode.OK).send(utils.responseGenerators(response, httpStatusCode.OK, "Password changes email send successfully"))
+
+
+    } catch (err) {
+        utils.logger.error(`error sendResetPasswordMail ${err} ${JSON.stringify(err)}`)
+        res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err, httpStatusCode.INTERNAL_SERVER_ERROR, 'server error'))
+    }
+}
 
 const sendSendSecurityCode = async (req, res, next) => {
     try {
@@ -156,7 +180,54 @@ const sendSendSecurityCode = async (req, res, next) => {
     }
 }
 
+const sendResetPasswordMail = async (req, res, next) => {
+    try {
+        const body = req.body
+        const email = body.email
+
+        const userWithGivenMail = await userRepository.findOne({email: email})
+        const response = {}
+
+        if (!userWithGivenMail) {
+            response.status = false
+            response.error_message = "Email is not linked with any account, Please check you email address"
+            return res.status(httpStatusCode.OK).send(utils.errorsArrayGenrator(response, httpStatusCode.OK, "Email is not linked with any account, Please check you email address"))
+        }
+
+        // characters to generate password from
+        const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+        const string_length = 8
+        let randomString = ''
+        for (let i = 0; i < string_length; i++) {
+            const rNum = Math.floor(Math.random() * chars.length)
+            randomString += chars.substring(rNum, rNum + 1)
+        }
+
+        await userRepository.updatePassword({email: email}, randomString)
+        const mailBody = `You have requested to reset your password <br/> <br/>
+                          The temporary password is : <b>${randomString}</b> </a><br/>`
+
+        try {
+            utils.logger.debug(`Sending password reset email with body : ${mailBody}`)
+            await utils.sendEmail(email, 'Password Reset', mailBody)
+            response.email_sent = true
+            response.mail_body = mailBody
+            return res.status(httpStatusCode.OK).send(utils.responseGenerators(response, httpStatusCode.OK, "Password Reset mail sent successfully"))
+        } catch (err) {
+            utils.logger.error(`error while sending email error ${err}`)
+            response.email_sent = false
+            response.email_error = "Failed to send Email"
+            return res.status(httpStatusCode.OK).send(utils.responseGenerators(response, httpStatusCode.OK, "Failed to send email to reset password"))
+        }
+    } catch (err) {
+        utils.logger.error(`error sendResetPasswordMail ${err} ${JSON.stringify(err)}`)
+        res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err, httpStatusCode.INTERNAL_SERVER_ERROR, 'server error'))
+    }
+}
+
 router.post('/register', addUser)
 router.post('/login', validateCredentials)
+router.post('/change-password', changePassword)
 router.post('/send-security-code', sendSendSecurityCode)
+router.post('/password-change-request', sendResetPasswordMail)
 module.exports = router;
