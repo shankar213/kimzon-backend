@@ -47,3 +47,26 @@ module.exports.update = async (query, dataToUpdate) => {
         throw new Error("Invalid Data")
     }
 }
+
+
+module.exports.updatePassword = async (query, password) => {
+    try {
+        utils.logger.debug(`Data to be updated : ${JSON.stringify(password)}`, `update query : ${JSON.stringify(query)}`)
+        const user = await  UsersRepo.findOne(query)
+        const newUser = new UsersRepo(user)
+
+        newUser.setPassword(password)
+        const dataToUpdate = {
+            hash: newUser.hash,
+            salt: newUser.salt
+        }
+
+        const result = await UsersRepo.findOneAndUpdate(query, {$set: dataToUpdate}, {new: true})
+        utils.logger.debug("Users Object Data", result)
+        return result
+
+    } catch (e) {
+        utils.logger.error("error while updating password data to mongo db", e)
+        throw new Error("Invalid Data")
+    }
+}
