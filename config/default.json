@@ -23,7 +23,7 @@
     "root_host": "http://localhost:4200"
   },
   "send_grid": {
-    "SENDGRID_API_KEY": "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",
+    "SENDGRID_API_KEY": "***",
     "mail_from" : "no-reply@kiamzon.com"
   },
   "logs": {
