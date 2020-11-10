@@ -32,6 +32,7 @@ require('./models/users.model');
 app.use('/api/', indexRouter);
 app.use('/api/users/',  require('./routes/users.route'));
 app.use('/api/products/', require('./routes/product.routes'));
+app.use('/api/orders/', require('./routes/order.routes'));
 
 app.use(passport.initialize())
 require('./lib/passport')

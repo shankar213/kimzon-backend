@@ -12,6 +12,7 @@ module.exports = {
 
     COLLECTION_USERS: 'users',
     COLLECTION_PRODUCTS: 'products',
+    COLLECTION_ORDERS: 'orders',
 
 
 
