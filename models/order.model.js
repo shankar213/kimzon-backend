@@ -12,11 +12,16 @@ let orderSchema = new Schema({
         type: String,
         required: true
     },
-    shipping: {
-        address: {
+    shipping_details: {
+        name: {
             type: String,
             required: true
         },
+        street: {
+            type: String,
+            required: true
+        },
+        unit: String,
         city: {
             type: String,
             required: true
@@ -29,7 +34,40 @@ let orderSchema = new Schema({
             type: String,
             required: true
         },
+        postal: {
+            type: String,
+            required: true
+        },
+        contact: String,
+        email: String,
         delivery_notes: String,
+    },
+    billing_details: {
+        name: {
+            type: String,
+            required: true
+        },
+        street: {
+            type: String,
+            required: true
+        },
+        unit: String,
+        city: {
+            type: String,
+            required: true
+        },
+        province: {
+            type: String,
+            required: true
+        },
+        country: {
+            type: String,
+            required: true
+        },
+        postal: {
+            type: String,
+            required: true
+        }
     },
     items: [{
         product_id: {
