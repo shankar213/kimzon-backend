@@ -13,19 +13,12 @@ const config = require('../config/default')
 
 sgMail.setApiKey(config[utils.configCons.FIELD_SEND_GRID][utils.configCons.FIELD_SENDGRID_API_KEY])
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-    res.render('index', { title: 'Express' });
-});
-
-
-
 
 function prepareUserBody(dataFromBody) {
     const user = _.cloneDeep(dataFromBody)
-        if (!user.role) {
-            user.role = utils.enumCons.ROLES.CUSTOMER
-        }
+    if (!user.role) {
+        user.role = utils.enumCons.ROLES.CUSTOMER
+    }
     return user
 }
 
@@ -225,9 +218,27 @@ const sendResetPasswordMail = async (req, res, next) => {
     }
 }
 
+const getUsers = async (req, res, next) => {
+    try {
+        const findQuery = {is_deleted: false}
+        const users = await userRepository.findAll(findQuery)
+        const totalUsersCount = await userRepository.count(findQuery)
+        utils.logger.debug(`Users list : ${JSON.stringify(users)}`)
+
+        const responseData = {users: users, user_count: users.length, total_count: totalUsersCount}
+        res.status(httpStatusCode.OK).send(utils.responseGenerators(responseData, httpStatusCode.OK, "Users Fetched Successfully"))
+    } catch
+        (err) {
+        utils.logger.error(err)
+        res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err, httpStatusCode.INTERNAL_SERVER_ERROR, 'server error'))
+    }
+}
+
+
 router.post('/register', addUser)
+router.get('/', getUsers)
 router.post('/login', validateCredentials)
 router.post('/change-password', changePassword)
 router.post('/send-security-code', sendSendSecurityCode)
 router.post('/password-change-request', sendResetPasswordMail)
-module.exports = router;
+module.exports = router
