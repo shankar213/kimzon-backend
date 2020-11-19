@@ -234,9 +234,37 @@ const getUsers = async (req, res, next) => {
     }
 }
 
+const getUserDetails = async (req, res, next) => {
+    try {
+        const findQuery = {is_deleted: false}
+        const userId = req.params.user_id
+        if (!userId || isNaN(userId)) {
+            utils.logger.debug(`Can not find user id in url params : ${JSON.stringify(req.params)}`)
+            res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.responseGenerators("Please provide User id", httpStatusCode.INTERNAL_SERVER_ERROR, "No User Id found"))
+            return
+        }
+        findQuery["id"] = +userId
+
+        let responseData = {}
+        const user = await userRepository.findOne(findQuery)
+        utils.logger.debug(`User  : ${JSON.stringify(user)}`)
+        if (!user) {
+            responseData = null
+            res.status(httpStatusCode.OK).send(utils.responseGenerators(responseData, httpStatusCode.INTERNAL_SERVER_ERROR, "User does not exit"))
+            return
+        }
+        responseData.user = user
+        res.status(httpStatusCode.OK).send(utils.responseGenerators(responseData, httpStatusCode.OK, "User Details Fetched Successfully"))
+    } catch
+      (err) {
+        utils.logger.error(err)
+        res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err, httpStatusCode.INTERNAL_SERVER_ERROR, 'server error'))
+    }
+}
 
 router.post('/register', addUser)
 router.get('/', getUsers)
+router.get('/:user_id', getUserDetails)
 router.post('/login', validateCredentials)
 router.post('/change-password', changePassword)
 router.post('/send-security-code', sendSendSecurityCode)
