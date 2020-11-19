@@ -58,6 +58,9 @@ let userDetailsSchema = new Schema({
         type: Date,
         default: Date.now
     },
+    phone: {
+        type: String
+    },
     additional_attributes: [{
         name: {
             type: String,
