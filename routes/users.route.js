@@ -14,8 +14,18 @@ const config = require('../config/default')
 sgMail.setApiKey(config[utils.configCons.FIELD_SEND_GRID][utils.configCons.FIELD_SENDGRID_API_KEY])
 
 
-function prepareUserBody(dataFromBody) {
+function prepareUserBody(dataFromBody, forEdit = false) {
     const user = _.cloneDeep(dataFromBody)
+    if (forEdit) {
+        delete  user.is_verified
+        delete  user.is_suspended
+        delete  user.role
+        delete  user.is_deleted
+        delete  user._id
+        delete  user.email
+        delete  user.salt
+        delete  user.hash
+    }
     if (!user.role) {
         user.role = utils.enumCons.ROLES.CUSTOMER
     }
@@ -262,9 +272,35 @@ const getUserDetails = async (req, res, next) => {
     }
 }
 
+const updateUserDetails = async (req, res, next) => {
+    try {
+        utils.logger.info(`Request body contains : ${JSON.stringify(req.body)}`)
+        const userDetailsFromBody = req.body.user
+
+        const userToUpdate = prepareUserBody(userDetailsFromBody, true)
+        const userId = req.params.user_id
+        if (!userId) {
+            utils.logger.debug(`Can not find user id in url params : ${JSON.stringify(req.params)}`)
+            res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.responseGenerators("Please provide User id to edit", httpStatusCode.INTERNAL_SERVER_ERROR, "No User Id found"))
+            return
+        }
+        const result = await userRepository.updateUserById(+userId, userToUpdate)
+        utils.logger.debug(`Response From User Update  ${JSON.stringify(result)}`)
+        let response = null;
+        if (result) {
+            response = {user : result[0]};
+        }
+
+        res.status(httpStatusCode.OK).send(utils.responseGenerators(response, httpStatusCode.OK, "User Updated"))
+    } catch (err) {
+        utils.logger.error(`Update User Error ${err}`)
+        res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err, httpStatusCode.INTERNAL_SERVER_ERROR, 'server error'))
+    }
+}
 router.post('/register', addUser)
 router.get('/', getUsers)
 router.get('/:user_id', getUserDetails)
+router.put('/:user_id', updateUserDetails)
 router.post('/login', validateCredentials)
 router.post('/change-password', changePassword)
 router.post('/send-security-code', sendSendSecurityCode)
