@@ -3,6 +3,7 @@ const router = express.Router()
 const _ = require('lodash')
 const utils = require('../lib/utils')
 const orderRepository = require('../repositories/order.repo')
+const userRepository = require('../repositories/users.repo')
 const httpStatusCode = require('http-status-codes').StatusCodes
 
 function prepareOrderBody (orderDetailsFromBody) {
@@ -31,10 +32,11 @@ const createOrder = async (req, res, next) => {
         utils.logger.debug(`Response from inserting order ${JSON.stringify(result)}`)
 
         if (result) {
+            const  customer = await userRepository.findOne({id: result.customer_id})
             response.order_details = result
             try {
-                const mailBody = `Order has been placed Successfully`
-                await utils.sendEmail(result.email, 'Congratulations!, Order Received', mailBody)
+                const mailBody = `Order has been placed Successfully `
+                await utils.sendEmail(customer.email, 'Congratulations!, Order Received', mailBody)
                 response.email_sent = true
             } catch (err) {
                 response.email_sent = false

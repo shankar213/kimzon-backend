@@ -22,7 +22,7 @@ module.exports.insertOne = async (documentJSON) => {
 module.exports.findOne = async (findQuery) => {
     try {
         const user = await User.findOne(findQuery)
-        utils.logger.debug(`user_detail with matching Query ${JSON.stringify(findQuery)}  =  ${user}`)
+        utils.logger.debug(`user_detail with matching Query ${JSON.stringify(findQuery)}  =  ${JSON.stringify(user)}`)
         if (!user) {
             return false
         } else
