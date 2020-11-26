@@ -157,6 +157,13 @@ const getProducts = async (req, res, next) => {
             if(req.body.term) {
                 findQuery.name = { "$regex": req.body.term, "$options": "i" }
             }
+            if(req.body.condition) {
+                if(req.body.condition === utils.enumCons.PRODUCT_CONDITION.USED){
+                    findQuery.condition = utils.enumCons.PRODUCT_CONDITION.USED
+                } else if(req.body.condition === utils.enumCons.PRODUCT_CONDITION.NEW){
+                    findQuery.condition ={ $in: [utils.enumCons.PRODUCT_CONDITION.NEW, null] }
+                }
+            }
             if (req.body.ids && Array.isArray(req.body.ids)) {
                 findQuery.id = {$in: req.body.ids}
             }
