@@ -28,6 +28,11 @@ let productSchema = new Schema({
         type: Number,
         required: true
     },
+    condition: {
+        type: String,
+        required: true,
+        default: utils.enumCons.PRODUCT_CONDITION.NEW
+    },
     images: [{
         type: String,
         required: true
