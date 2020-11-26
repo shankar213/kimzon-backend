@@ -60,10 +60,10 @@ const getOrders = async (req, res, next) => {
             findQuery['customer_id'] = +req.params.customer_id
         } else
             res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator('User Id not provided', httpStatusCode.INTERNAL_SERVER_ERROR, 'Something went wrong'))
-        const users = await orderRepository.findAll(findQuery)
-        utils.logger.debug(`Orders list : ${JSON.stringify(users)}`)
+        const orders = await orderRepository.findAll(findQuery)
+        utils.logger.debug(`Orders list : ${JSON.stringify(orders)}`)
 
-        const responseData = { users: users, user_count: users.length }
+        const responseData = { orders: orders, orders_count: orders.length }
         res.status(httpStatusCode.OK).send(utils.responseGenerators(responseData, httpStatusCode.OK, 'Users Fetched Successfully'))
     } catch
         (err) {
