@@ -9,7 +9,7 @@ let orderSchema = new Schema({
         required: true
     },
     customer_id: {
-        type: String,
+        type: Number,
         required: true
     },
     shipping_details: {
@@ -72,6 +72,10 @@ let orderSchema = new Schema({
     items: [{
         product_id: {
             type: Number,
+            required: true
+        },
+        name:{
+            type: String,
             required: true
         },
         unit_price: {

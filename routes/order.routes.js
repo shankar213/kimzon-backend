@@ -2,16 +2,15 @@ const express = require('express')
 const router = express.Router()
 const _ = require('lodash')
 const utils = require('../lib/utils')
-const orderRepository = require("../repositories/order.repo")
+const orderRepository = require('../repositories/order.repo')
 const httpStatusCode = require('http-status-codes').StatusCodes
 
-function prepareOrderBody(orderDetailsFromBody) {
+function prepareOrderBody (orderDetailsFromBody) {
     const orderBody = _.cloneDeep(orderDetailsFromBody)
     let subtotal = 0
     if (Array.isArray(orderBody.items)) {
         orderBody.items.forEach((item) => {
-            console.log(item)
-            if (!item.unit_price || !item.qty) throw new Error("Items details in order is incomplete")
+            if (!item.unit_price || !item.qty) throw new Error('Items details in order is incomplete')
             item.subtotal = item.unit_price * item.qty
             subtotal += item.subtotal
         })
@@ -39,19 +38,38 @@ const createOrder = async (req, res, next) => {
                 response.email_sent = true
             } catch (err) {
                 response.email_sent = false
-                response.email_error = "Failed to send Email"
+                response.email_error = 'Failed to send Email'
             }
         } else {
             response.order_details = null
-            response.error = "Failed to Create an Order"
+            response.error = 'Failed to Create an Order'
         }
-        res.status(httpStatusCode.OK).send(utils.responseGenerators(response, httpStatusCode.OK, "Order Created Successfully"))
+        res.status(httpStatusCode.OK).send(utils.responseGenerators(response, httpStatusCode.OK, 'Order Created Successfully'))
     } catch (err) {
         utils.logger.error(`createOrder error ${err}`)
         res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err.message, httpStatusCode.INTERNAL_SERVER_ERROR, err, err))
     }
 }
 
+const getOrders = async (req, res, next) => {
+    try {
+        const findQuery = { is_deleted: false }
+        if (req.params.customer_id) {
+            findQuery['customer_id'] = +req.params.customer_id
+        } else
+            res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator('User Id not provided', httpStatusCode.INTERNAL_SERVER_ERROR, 'Something went wrong'))
+        const users = await orderRepository.findAll(findQuery)
+        utils.logger.debug(`Orders list : ${JSON.stringify(users)}`)
+
+        const responseData = { users: users, user_count: users.length }
+        res.status(httpStatusCode.OK).send(utils.responseGenerators(responseData, httpStatusCode.OK, 'Users Fetched Successfully'))
+    } catch
+        (err) {
+        utils.logger.error(err)
+        res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err, httpStatusCode.INTERNAL_SERVER_ERROR, 'server error'))
+    }
+}
 
 router.post('/', createOrder)
+router.get('/user/:customer_id', getOrders)
 module.exports = router
