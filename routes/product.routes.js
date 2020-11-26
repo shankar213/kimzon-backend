@@ -154,6 +154,9 @@ const getProducts = async (req, res, next) => {
                 if (req.body.price.max)
                     findQuery.price["$lt"] = req.body.price.max
             }
+            if(req.body.term) {
+                findQuery.name = { "$regex": req.body.term, "$options": "i" }
+            }
             if (req.body.ids && Array.isArray(req.body.ids)) {
                 findQuery.id = {$in: req.body.ids}
             }
@@ -191,8 +194,7 @@ const getProductDetails = async (req, res, next) => {
         }
         responseData.product = product
         res.status(httpStatusCode.OK).send(utils.responseGenerators(responseData, httpStatusCode.OK, "Product Details Fetched Successfully"))
-    } catch
-        (err) {
+    } catch (err) {
         utils.logger.error(err)
         res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err, httpStatusCode.INTERNAL_SERVER_ERROR, 'server error'))
     }
