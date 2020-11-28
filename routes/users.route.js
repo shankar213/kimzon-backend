@@ -18,7 +18,6 @@ function prepareUserBody(dataFromBody, forEdit = false) {
     const user = _.cloneDeep(dataFromBody)
     if (forEdit) {
         delete  user.is_verified
-        delete  user.is_suspended
         delete  user.role
         delete  user.is_deleted
         delete  user._id
@@ -96,8 +95,12 @@ const validateCredentials = async (req, res, next) => {
                     const userData = _.cloneDeep(user)
                     delete userData.hash
                     delete userData.salt
+                    let response = {}
+                    if(userData.is_suspended){
+                        return res.status(httpStatusCode.OK).send(utils.errorsArrayGenrator("Account Suspended!", httpStatusCode.OK, 'Cannot log in! Your account has been suspended.', {valid: false}))
+                    }
 
-                    const response = {
+                    response = {
                         valid: true,
                         token: token,
                         user_details: userData,
