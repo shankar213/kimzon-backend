@@ -4,6 +4,7 @@ const _ = require('lodash')
 const utils = require('../lib/utils')
 const orderRepository = require('../repositories/order.repo')
 const userRepository = require('../repositories/users.repo')
+const productRepository = require('../repositories/product.repo')
 const httpStatusCode = require('http-status-codes').StatusCodes
 
 function prepareOrderBody (orderDetailsFromBody) {
@@ -64,7 +65,47 @@ const getOrders = async (req, res, next) => {
         utils.logger.debug(`Orders list : ${JSON.stringify(orders)}`)
 
         const responseData = { orders: orders, orders_count: orders.length }
-        res.status(httpStatusCode.OK).send(utils.responseGenerators(responseData, httpStatusCode.OK, 'Users Fetched Successfully'))
+        res.status(httpStatusCode.OK).send(utils.responseGenerators(responseData, httpStatusCode.OK, 'Orders Fetched Successfully'))
+    } catch
+        (err) {
+        utils.logger.error(err)
+        res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator(err, httpStatusCode.INTERNAL_SERVER_ERROR, 'server error'))
+    }
+}
+
+const getOrdersForSeller = async (req, res, next) => {
+    const sellerId = req.params.seller_id
+    try {
+        const findQuery = { is_deleted: false }
+        if (!sellerId)
+            res.status(httpStatusCode.INTERNAL_SERVER_ERROR).send(utils.errorsArrayGenrator('seller Id not provided', httpStatusCode.INTERNAL_SERVER_ERROR, 'Something went wrong'))
+
+        const products = await productRepository.findAll({ seller_id: sellerId })
+        const productIdsForSeller = products.map(p => p.id)
+        // condition to fetch only current seller's products
+        findQuery['items.product_id'] = { '$in': productIdsForSeller }
+
+        const orders = await orderRepository.findAll(findQuery)
+        const pendingOrders = []
+        const previousOrders = []
+        if (orders && Array.isArray(orders)) {
+            orders.forEach((order) => {
+                const orderForSeller = {
+                    shipping_details: order.shipping_details,
+                    order_id: order.id,
+                    created_on: order.created_on
+                }
+                orderForSeller.items = order.items.filter(item => productIdsForSeller.includes(item.product_id))
+                if (orderForSeller.items[0].is_fulfilled)
+                    previousOrders.push(orderForSeller)
+                else
+                    pendingOrders.push(orderForSeller)
+            })
+        }
+        utils.logger.debug(`Orders list : ${JSON.stringify({ pending_orders: pendingOrders, previous_orders: previousOrders })}`)
+
+        const responseData = { pending_orders: pendingOrders, previous_orders: previousOrders }
+        res.status(httpStatusCode.OK).send(utils.responseGenerators(responseData, httpStatusCode.OK, 'Orders Fetched Successfully'))
     } catch
         (err) {
         utils.logger.error(err)
@@ -74,4 +115,5 @@ const getOrders = async (req, res, next) => {
 
 router.post('/', createOrder)
 router.get('/user/:customer_id', getOrders)
+router.get('/seller/:seller_id', getOrdersForSeller)
 module.exports = router
