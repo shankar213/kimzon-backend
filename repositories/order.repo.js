@@ -24,7 +24,7 @@ module.exports.findOne = async (findQuery) => {
         utils.logger.debug(`orders matching find query : ${JSON.stringify(result)}`)
         return result
     } catch (e) {
-        utils.logger.error(`error while finding data from collection : ${utils.dbCons.COLLECTION_USERS} for query ${findQuery}`, e)
+        utils.logger.error(`error while finding data from collection : ${utils.dbCons.COLLECTION_ORDERS} for query ${findQuery}`, e)
         throw new Error("Error finding orders for given query")
     }
 }
@@ -36,8 +36,21 @@ module.exports.findAll = async (findQuery) => {
         utils.logger.debug(`orders matching find query : ${JSON.stringify(result)}`)
         return result
     } catch (e) {
-        utils.logger.error(`error while finding data from collection : ${utils.dbCons.COLLECTION_USERS} for query ${findQuery}`, e)
+        utils.logger.error(`error while finding data from collection : ${utils.dbCons.COLLECTION_ORDERS} for query ${findQuery}`, e)
         throw new Error("Error finding orders for given query")
+    }
+}
+
+module.exports.update = async (query, dataToUpdate) => {
+    try {
+        utils.logger.debug(`data to be updated : ${JSON.stringify(dataToUpdate)}`, `update query : ${JSON.stringify(query)}`)
+
+        const result = await Order.update(query, { $set: dataToUpdate })
+        utils.logger.debug('Orders Object Data', result)
+        return result
+    } catch (e) {
+        utils.logger.error('Error while updating  data to mongo db', e)
+        throw new Error('Invalid Data')
     }
 }
 

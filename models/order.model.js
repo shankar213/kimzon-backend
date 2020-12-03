@@ -90,6 +90,10 @@ let orderSchema = new Schema({
         subtotal: {
             type: Number,
             required: true
+        },
+        is_fulfilled: {
+            type: Boolean,
+            default: false
         }
     }],
     subtotal: {
