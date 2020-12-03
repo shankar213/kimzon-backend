@@ -146,6 +146,7 @@ const getProducts = async (req, res, next) => {
         }
 
         if (req.method === "POST") {
+            findQuery.is_suspended = { $exists: false };
             if (req.body.category) findQuery.category = req.body.category
             if (req.body.price && (req.body.price.min || req.body.price.max)) {
                 findQuery.price = {}
@@ -167,6 +168,7 @@ const getProducts = async (req, res, next) => {
             if (req.body.ids && Array.isArray(req.body.ids)) {
                 findQuery.id = {$in: req.body.ids}
             }
+
         }
         const products = await productRepository.findAll(findQuery)
         const totalProductsCount = await productRepository.count(findQuery)

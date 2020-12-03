@@ -45,6 +45,10 @@ let productSchema = new Schema({
         type: Boolean,
         default: false
     },
+    is_suspended: {
+        type: Boolean,
+        default: false
+    },
     updated_on: {
         type: Date,
         default: Date.now
